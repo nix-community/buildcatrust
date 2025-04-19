@@ -72,11 +72,11 @@ let
   };
   pytype = python.pkgs.buildPythonPackage rec {
     pname = "pytype";
-    version = "2024.2.9";
+    version = "2024.10.11";
 
     src = python.pkgs.fetchPypi {
       inherit pname version;
-      sha256 = "sha256:106dma6qjsgqyh5ky7czfnp1vy5kzi5mfxz2lpw413pyrcxxwfj9";
+      hash = "sha256-rl/4LwsH1a1o1Owyo+jeRPrW7VZaghp2rKUKFN84InQ=";
     };
 
     doCheck = false;  # tries to parse Python2 things
@@ -84,8 +84,10 @@ let
     propagatedBuildInputs = with python.pkgs; [
       attrs
       importlab
+      immutabledict
       jinja2
       libcst
+      msgspec
       networkx
       ninjaPy
       pybind11

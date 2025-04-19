@@ -274,5 +274,4 @@ def _parser_object_to_python(
 
 
 class CertificateOutput(Protocol):
-    def output(self, cert: Certificate | None, trust: Trust) -> None:
-        ...
+    def output(self, cert: Certificate | None, trust: Trust) -> None: ...

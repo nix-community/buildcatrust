@@ -142,8 +142,7 @@ class ExtendedKeyUsages:
 
 
 class DerSerializable(Protocol):
-    def as_der(self) -> bytes:
-        ...
+    def as_der(self) -> bytes: ...
 
 
 @dataclasses.dataclass(frozen=True)
