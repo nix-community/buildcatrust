@@ -18,7 +18,7 @@ maintainers = [
 dynamic = ["description", "version"]
 
 [project.urls]
-Source = "https://github.com/lukegb/buildcatrust"
+Source = "https://github.com/nix-community/buildcatrust"
 
 [project.scripts]
 buildcatrust = "buildcatrust.cli:main"
