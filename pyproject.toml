@@ -5,7 +5,8 @@
 [project]
 name = "buildcatrust"
 requires-python = ">=3.11"
-license.file = "LICENSES/MIT.txt"
+license = "MIT"
+license-files = ["LICENSES/*.txt", "AUTHORS"]
 readme = "README.md"
 authors = [
     {name = "Luke Granger-Brown", email = "buildcatrust@lukegb.com"},
@@ -13,9 +14,6 @@ authors = [
 ]
 maintainers = [
     {name = "Luke Granger-Brown", email = "buildcatrust@lukegb.com"},
-]
-classifiers = [
-    "License :: OSI Approved :: MIT License",
 ]
 dynamic = ["description", "version"]
 
@@ -26,7 +24,7 @@ Source = "https://github.com/lukegb/buildcatrust"
 buildcatrust = "buildcatrust.cli:main"
 
 [build-system]
-requires = ["flit_core >=2,<4"]
+requires = ["flit_core >=3.12,<4"]
 build-backend = "flit_core.buildapi"
 
 [tool.pytest.ini_options]
