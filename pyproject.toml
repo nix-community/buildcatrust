@@ -35,7 +35,7 @@ testpaths = ["buildcatrust"]
 [tool.pytype]
 inputs = ["buildcatrust"]
 
-[tool.ruff]
+[tool.ruff.lint]
 select = ["F", "E", "W", "I"]
 ignore = [
   "E501",  # drop E501 line-too-long, format will do its best
