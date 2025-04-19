@@ -1,0 +1,10 @@
+version = 1
+SPDX-PackageName = "buildcatrust"
+SPDX-PackageSupplier = "Luke Granger-Brown <git@lukegb.com>"
+SPDX-PackageDownloadLocation = "https://github.com/lukegb/buildcatrust"
+
+[[annotations]]
+path = "AUTHORS"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2024 the buildcatrust authors <git@lukegb.com>"
+SPDX-License-Identifier = "MIT"
