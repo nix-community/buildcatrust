@@ -5,7 +5,7 @@
 from collections.abc import Iterable
 import dataclasses
 import hashlib
-from typing import Protocol
+from typing import no_type_check, Protocol
 
 from . import der_x509
 from . import enums
@@ -35,6 +35,7 @@ class Certificate:
     sha256_fingerprint: str
 
     @classmethod
+    @no_type_check  # invalid argument type
     def from_parser_object(cls, obj: nss_parser.ParsedObject) -> "Certificate":
         return cls(
             label=obj[b"CKA_LABEL"],
@@ -151,6 +152,7 @@ class Trust:
         )
 
     @classmethod
+    @no_type_check  # invalid argument type
     def from_parser_object(cls, obj: nss_parser.ParsedObject):
         return cls(
             label=obj[b"CKA_LABEL"],

@@ -91,6 +91,9 @@ class Parser:
     def _new_attribute(self) -> None:
         if self._current_attribute:
             # Parse the type to turn it into something useful.
+            assert self._current_object is not None
+            assert isinstance(self._current_type, bytes)
+            assert isinstance(self._current_value, bytes)
             self._current_object[self._current_attribute] = _value_to_python(
                 self._current_type, self._current_value
             )

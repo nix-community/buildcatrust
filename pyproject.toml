@@ -30,9 +30,6 @@ build-backend = "flit_core.buildapi"
 [tool.pytest.ini_options]
 testpaths = ["buildcatrust"]
 
-[tool.pytype]
-inputs = ["buildcatrust"]
-
 [tool.ruff.lint]
 select = ["F", "E", "W", "I"]
 ignore = [

@@ -5,9 +5,9 @@
 repos:
   - repo: local
     hooks:
-      - id: pytype
-        name: pytype
-        entry: pytype
+      - id: ty
+        name: ty
+        entry: ty check
         args:
           - buildcatrust/
         language: python
