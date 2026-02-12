@@ -101,8 +101,12 @@ def output_to_hashed_dir(
             continue
         cert = db.certmap[mapkey]
         symlinks_by_hash[cert.openssl_subject_hash[:8]].add(filename)
+    # OpenSSL's c_rehash uses MAX_COLLISIONS = 256 (apps/rehash.c) and %d
+    # format for the digit portion, so filenames like 84736cea.10 are valid.
+    # The OpenSSL docs say "D is a single decimal digit" but the implementation
+    # supports multi-digit values up to 255.
     for hashpart, target_filenames in symlinks_by_hash.items():
-        if len(target_filenames) > 10:
+        if len(target_filenames) > 256:
             raise TooManyCertificatesError(
                 f"Too many certificates have a truncated subject hash of {hashpart}"
             )
