@@ -47,8 +47,7 @@ The best answer for developing this software is to use Nix, which will provide
 dependencies for you automatically (at least on Linux-based distributions).
 
 You should be able to run `nix-shell` in the root of this repo to get a working
-shell containing a Python interpreter with `ruff`, `pytest`, `pytype`, and so
-on.
+shell containing a Python interpreter with `ruff`, `pytest`, `ty`, and so on.
 
 It is also suggested to run `pre-commit` when making changes; you can install
 its hook using `pre-commit install` which will ensure that things are correctly

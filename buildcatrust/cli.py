@@ -231,7 +231,7 @@ def cli_main(raw_args):
         ),
     }
     for k, v in outputs.items():
-        did_output = v[0](db, args, k, *v[1:]) or did_output
+        did_output = v[0](db, args, k, *v[1:]) or did_output  # ty: ignore[invalid-argument-type]
 
     if not did_output:
         argparser.print_help()

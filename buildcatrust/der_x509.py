@@ -57,16 +57,16 @@ def _encode_int(n: int) -> bytearray:
     return nbuf[::-1]
 
 
-def _decode_int(b: bytes) -> tuple[int, bytes]:
+def _decode_int(b: bytes | bytearray) -> tuple[int, bytes]:
     if b[0] < 0x80:
-        return int(b[0]), b[1:]
+        return int(b[0]), bytes(b[1:])
 
     n = 0
     pos = 0
     while True:
         n = (n << 7) | (b[pos] & 0x7F)
         if (b[pos] & 0x80) == 0:
-            return n, b[pos + 1 :]
+            return n, bytes(b[pos + 1 :])
         pos += 1
 
 
