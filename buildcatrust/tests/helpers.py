@@ -14,7 +14,7 @@ def run_main(**kwargs):
     return cli.cli_main(args)
 
 
-def check_output_main(tmp_path, want_p11kit, want_ca, main_args):
+def check_output_main(tmp_path, want_p11kit, want_ca, want_output_files, main_args):
     ca_unpacked_output = tmp_path / "ca_unpacked"
     ca_unpacked_output.mkdir(exist_ok=True)
     p11kit_output = tmp_path / "p11kit.p11"
@@ -43,9 +43,7 @@ def check_output_main(tmp_path, want_p11kit, want_ca, main_args):
         for f in ca_unpacked_output.iterdir()
         if f.name.endswith(".crt") and f.is_file()
     ]
-    assert [f.name for f in ca_unpacked_files] == [
-        "Certum_EC-384_CA:788f275c81125220a504d02dddba73f4.crt"
-    ]
+    assert [f.name for f in ca_unpacked_files] == want_output_files
     with open(ca_unpacked_files[0]) as ca_unpacked_fp:
         ca_unpacked_data = ca_unpacked_fp.read()
         assert ca_unpacked_data == want_ca

@@ -8,3 +8,15 @@ path = "AUTHORS"
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2024 the buildcatrust authors <git@lukegb.com>"
 SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "npins/sources.json"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 the buildcatrust authors <git@lukegb.com>"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "npins/default.nix"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2022 the npins authors"
+SPDX-License-Identifier = "MIT"

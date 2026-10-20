@@ -157,6 +157,11 @@ def _parse_args(args: list[str]) -> tuple[argparse.ArgumentParser, argparse.Name
         nargs="*",
     )
     argparser.add_argument(
+        "--distrust_bundle_input",
+        help="Path to a cert bundle or directory to distrust. These should be standard PEM files only - OpenSSL-style TRUSTED CERTIFICATEs will have their trust bits ignored.",
+        nargs="*",
+    )
+    argparser.add_argument(
         "--blocklist_input",
         help="Path to a new-line separated blocklist of certificates from the provided certstore to distrust. Can be either the label in the NSS store, or the internal key (which is output alongside the certificate in the available output formats).",
     )
@@ -187,6 +192,34 @@ def cli_main(raw_args):
         for f in bundle_files:
             with open(f) as ca_bundle_fp:
                 db.add_certs(certstore_parser.read_certificates(ca_bundle_fp))
+
+    distrust_db = types.CertDB()
+    for bundle_path in args.distrust_bundle_input or []:
+        if os.path.isfile(bundle_path):
+            bundle_files = [bundle_path]
+        elif os.path.isdir(bundle_path):
+            bundle_files = [
+                os.path.join(bundle_path, f) for f in os.listdir(bundle_path)
+            ]
+            bundle_files = [f for f in bundle_files if os.path.isfile(f)]
+        else:
+            raise FileNotFoundError(f"Bundle not found: {bundle_path}")
+        for f in bundle_files:
+            with open(f) as ca_bundle_fp:
+                distrust_db.add_certs(certstore_parser.read_certificates(ca_bundle_fp))
+    distrusted_fingerprints = {
+        cert.sha256_fingerprint for cert in distrust_db.certmap.values()
+    }
+    seen_fingerprints = set()
+    for cert_key, cert in db.certmap.items():
+        if cert.sha256_fingerprint in distrusted_fingerprints:
+            db.trustmap[cert_key] = db.trustmap[cert_key].as_distrusted()
+            seen_fingerprints.add(cert.sha256_fingerprint)
+    for cert_key, cert in distrust_db.certmap.items():
+        if cert.sha256_fingerprint in seen_fingerprints:
+            continue
+        db.certmap[cert_key] = distrust_db.certmap[cert_key]
+        db.trustmap[cert_key] = distrust_db.trustmap[cert_key].as_distrusted()
 
     blocklist = frozenset()
     if args.blocklist_input:
@@ -235,7 +268,7 @@ def cli_main(raw_args):
         ),
     }
     for k, v in outputs.items():
-        did_output = v[0](db, args, k, *v[1:]) or did_output  # ty: ignore[invalid-argument-type]
+        did_output = v[0](db, args, k, *v[1:]) or did_output  # ty: ignore[missing-argument, too-many-positional-arguments]
 
     if not did_output:
         argparser.print_help()

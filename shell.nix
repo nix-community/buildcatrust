@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-{ pkgs ? import <nixpkgs> {
-    # overlays = [ (self: super: { }) ];
-  }
+let
+  sources = import ./npins;
+  nixpkgs = import sources.nixpkgs {};
+in
+{ pkgs ? nixpkgs
 }:
 
 let
@@ -25,6 +27,8 @@ pkgs.mkShell {
   buildInputs = with pkgs; [
     pre-commit
     myPython
+    npins
+    nixfmt
     openssl
     reuse
     ruff
