@@ -165,6 +165,12 @@ def _parse_args(args: list[str]) -> tuple[argparse.ArgumentParser, argparse.Name
         "--blocklist_input",
         help="Path to a new-line separated blocklist of certificates from the provided certstore to distrust. Can be either the label in the NSS store, or the internal key (which is output alongside the certificate in the available output formats).",
     )
+    argparser.add_argument(
+        "--strict_blocklist",
+        help="Fail if blocklist contains entries not in the trust set.",
+        action="store_true",
+        default=False,
+    )
 
     return argparser, argparser.parse_args(args)
 
@@ -246,7 +252,8 @@ def cli_main(raw_args):
             f"Certs in blocklist but not in cert store: {unseen_blocklist}",
             file=sys.stderr,
         )
-        return 3
+        if args.strict_blocklist:
+            return 3
 
     did_output = False
     outputs = {
