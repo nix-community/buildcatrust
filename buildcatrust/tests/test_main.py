@@ -283,3 +283,122 @@ CAYIKwYBBQUHAwUGCCsGAQUFBwMGBggrBgEFBQcDBw==
             "distrust_bundle_input": helpers.TESTDATA_DIR / "pem-certumec384.pem",
         },
     )
+
+
+# `cli_main` returns 3 when an entry of `--blocklist_input` matches no
+# certificate in the certstore.
+EXIT_CODE_NONMATCHING_BLOCKLIST_ENTRY = 3
+
+
+def run_main_outputs(tmp_path, main_args):
+    """Runs `cli_main` and returns its exit code and the contents of its outputs.
+
+    The outputs are `None` when `cli_main` fails, because it then exits before
+    writing them.
+    """
+    tmp_path.mkdir(exist_ok=True)
+    p11kit_output = tmp_path / "p11kit.p11"
+    ca_bundle_output = tmp_path / "cabundle.crt"
+    ret = helpers.run_main(
+        p11kit_output=p11kit_output,
+        ca_bundle_output=ca_bundle_output,
+        **main_args,
+    )
+    if ret != 0:
+        return ret, None
+    return ret, (p11kit_output.read_text(), ca_bundle_output.read_text())
+
+
+def write_blocklist(path, entries):
+    path.write_text("".join(f"{e}\n" for e in entries))
+    return path
+
+
+def test_blocklist_missing_is_error(tmp_path, capsys):
+    # The matching entry must not prevent the error for the nonmatching one.
+    blocklist = write_blocklist(
+        tmp_path / "blocklist.txt", ["Certum EC-384 CA", "Nonexistent CA"]
+    )
+    ret, _ = run_main_outputs(
+        tmp_path / "out",
+        {
+            "certdata_input": helpers.TESTDATA_DIR / "certdata-certumec384.txt",
+            "blocklist_input": blocklist,
+        },
+    )
+    assert ret == EXIT_CODE_NONMATCHING_BLOCKLIST_ENTRY
+    assert "Nonexistent CA" in capsys.readouterr().err
+
+
+def test_blocklist_ignoring_nonmatching(tmp_path, capsys):
+    certdata = helpers.TESTDATA_DIR / "certdata-certumec384.txt"
+    want_ret, want_outputs = run_main_outputs(
+        tmp_path / "want",
+        {
+            "certdata_input": certdata,
+            "blocklist_input": helpers.TESTDATA_DIR / "blocklist-certumec384.txt",
+        },
+    )
+    assert want_ret == 0
+    # Discard the reference run's stderr, so that the checks below see only
+    # the second run's.
+    capsys.readouterr()
+
+    blocklist = write_blocklist(
+        tmp_path / "blocklist.txt", ["Certum EC-384 CA", "Nonexistent CA"]
+    )
+    ret, outputs = run_main_outputs(
+        tmp_path / "got",
+        {
+            "certdata_input": certdata,
+            "blocklist_ignoring_nonmatching_input": blocklist,
+        },
+    )
+    assert ret == 0
+    # Existing entries are distrusted exactly as with `--blocklist_input`.
+    assert outputs == want_outputs
+    err = capsys.readouterr().err
+    assert "Warning" in err
+    assert "Nonexistent CA" in err
+    # Only nonmatching entries are warned about.
+    assert "Certum EC-384 CA" not in err
+
+
+def test_blocklist_ignoring_nonmatching_does_not_relax_strict_blocklist(
+    tmp_path, capsys
+):
+    # A nonmatching `--blocklist_input` entry must still fail the run, even
+    # though `--blocklist_ignoring_nonmatching_input` is also given.
+    strict = write_blocklist(tmp_path / "strict.txt", ["Nonexistent strict CA"])
+    lenient = write_blocklist(tmp_path / "lenient.txt", ["Certum EC-384 CA"])
+    ret, _ = run_main_outputs(
+        tmp_path / "out",
+        {
+            "certdata_input": helpers.TESTDATA_DIR / "certdata-certumec384.txt",
+            "blocklist_input": strict,
+            "blocklist_ignoring_nonmatching_input": lenient,
+        },
+    )
+    assert ret == EXIT_CODE_NONMATCHING_BLOCKLIST_ENTRY
+    assert "Nonexistent strict CA" in capsys.readouterr().err
+
+
+def test_blocklist_entry_in_both_lists(tmp_path):
+    # Both lists share the record of which entries matched, so an entry in
+    # both must count as matched for each of them.
+    certdata = helpers.TESTDATA_DIR / "certdata-certumec384.txt"
+    blocklist = helpers.TESTDATA_DIR / "blocklist-certumec384.txt"
+    _, want_outputs = run_main_outputs(
+        tmp_path / "want",
+        {"certdata_input": certdata, "blocklist_input": blocklist},
+    )
+    ret, outputs = run_main_outputs(
+        tmp_path / "got",
+        {
+            "certdata_input": certdata,
+            "blocklist_input": blocklist,
+            "blocklist_ignoring_nonmatching_input": blocklist,
+        },
+    )
+    assert ret == 0
+    assert outputs == want_outputs
