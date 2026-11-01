@@ -163,7 +163,11 @@ def _parse_args(args: list[str]) -> tuple[argparse.ArgumentParser, argparse.Name
     )
     argparser.add_argument(
         "--blocklist_input",
-        help="Path to a new-line separated blocklist of certificates from the provided certstore to distrust. Can be either the label in the NSS store, or the internal key (which is output alongside the certificate in the available output formats).",
+        help="Path to a new-line separated blocklist of certificates from the provided certstore to distrust. Can be either the label in the NSS store, or the internal key (which is output alongside the certificate in the available output formats). It is an error if an entry matches no certificate in the certstore.",
+    )
+    argparser.add_argument(
+        "--blocklist_ignoring_nonmatching_input",
+        help="Like --blocklist_input, but entries that match no certificate in the certstore (e.g. because upstream removed that certificate) only produce a warning instead of an error.",
     )
 
     return argparser, argparser.parse_args(args)
@@ -224,6 +228,12 @@ def cli_main(raw_args):
     blocklist = frozenset()
     if args.blocklist_input:
         blocklist = load_blocklist(args.blocklist_input)
+    blocklist_ignoring_nonmatching = frozenset()
+    if args.blocklist_ignoring_nonmatching_input:
+        blocklist_ignoring_nonmatching = load_blocklist(
+            args.blocklist_ignoring_nonmatching_input
+        )
+    all_blocklist = blocklist | blocklist_ignoring_nonmatching
 
     certs_without_trusts = set(db.certmap.keys()) - db.trustmap.keys()
     if certs_without_trusts:
@@ -234,12 +244,20 @@ def cli_main(raw_args):
     # We will allow either the trustmap key, or just the plain label.
     saw_blocklist = set()
     for key in sorted(db.trustmap.keys()):
-        if key in blocklist:
+        if key in all_blocklist:
             saw_blocklist.add(key)
             db.trustmap[key] = db.trustmap[key].as_distrusted()
-        elif db.trustmap[key].label in blocklist:
+        elif db.trustmap[key].label in all_blocklist:
             saw_blocklist.add(db.trustmap[key].label)
             db.trustmap[key] = db.trustmap[key].as_distrusted()
+    unseen_blocklist_ignoring_nonmatching = (
+        blocklist_ignoring_nonmatching - saw_blocklist
+    )
+    if unseen_blocklist_ignoring_nonmatching:
+        print(
+            f"Warning: Certs in blocklist (ignoring nonmatching) but not in cert store, ignoring them: {sorted(unseen_blocklist_ignoring_nonmatching)}",
+            file=sys.stderr,
+        )
     unseen_blocklist = blocklist - saw_blocklist
     if unseen_blocklist:
         print(
